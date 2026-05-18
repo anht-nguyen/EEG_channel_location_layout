@@ -2,7 +2,7 @@
 
 This repo exports EEG sensor-layout figures from config-defined cases in [config/eeg_config.py](/c:/DATA/git/EEG_channel_location_layout/config/eeg_config.py).
 
-The main script is [scripts/export_eeg_channel_layouts.py](/c:/DATA/git/EEG_channel_location_layout/scripts/export_eeg_channel_layouts.py). It reads `EXPORT_CASES` from the config, resolves one or more montages for each case, optionally subsets to a configured channel list, and exports:
+The main script is [scripts/export_eeg_channel_layouts.py](/c:/DATA/git/EEG_channel_location_layout/scripts/export_eeg_channel_layouts.py). It reads `EXPORT_CASES` from the config, resolves one or more montages for each case, keeps the native montage geometry for plotting, optionally limits the visible channels to a configured subset, and exports:
 
 - `*_2d.png`
 - `*_3d.png`
@@ -52,9 +52,11 @@ Supported `montage` forms are:
 - `"all_builtin"`
 - a list of montage names, for example `["standard_1005", "easycap-M1"]`
 
-`channel_list=None` means export the montage's full native channel set. If `channel_list` is provided, the script matches channel names case-insensitively and exports the matching subset while preserving the montage's canonical channel names.
+`channel_list=None` means export the montage's full native channel set. If `channel_list` is provided, the script matches channel names case-insensitively against the native montage, keeps the full native montage in `plot_sensors()`, and shows only the requested subset on the final figure.
 
 `sphere` is passed through to `mne.viz.plot_sensors(...)` for both 2D and 3D exports. Example values in the current config include `None` and `"eeglab"`.
+
+This matters for subset cases such as `uet175_22_channels`: `sphere="eeglab"` needs landmarks like `Fpz`, `Oz`, `T7`, and `T8` to remain present in the plotting `Info`, even if only a smaller channel subset is shown on the figure.
 
 ## Current Cases
 
@@ -97,12 +99,13 @@ Example with the full interpreter path:
 For each resolved montage inside a case, the script writes:
 
 - `*_2d.png`: 2D sensor layout
-- `*_3d.png`: 3D sensor layout
+- `*_3d.png`: 3D sensor layout with a fixed diagonal camera view
 - `*_summary.txt`: exported channels and any missing requested channels
 
 Examples:
 
 - [output/eeg_32_channels/easycap-M1_2d.png](/c:/DATA/git/EEG_channel_location_layout/output/eeg_32_channels/easycap-M1_2d.png)
+- [output/eeg_32_channels/easycap-M1_3d.png](/c:/DATA/git/EEG_channel_location_layout/output/eeg_32_channels/easycap-M1_3d.png)
 - [output/eeg_32_channels/easycap-M1_summary.txt](/c:/DATA/git/EEG_channel_location_layout/output/eeg_32_channels/easycap-M1_summary.txt)
 - [output/bci2000_64_channels/standard_1005_2d.png](/c:/DATA/git/EEG_channel_location_layout/output/bci2000_64_channels/standard_1005_2d.png)
 - [output/bci2000_64_channels/easycap-M1_2d.png](/c:/DATA/git/EEG_channel_location_layout/output/bci2000_64_channels/easycap-M1_2d.png)
@@ -110,5 +113,6 @@ Examples:
 ## Notes
 
 - The script forces MNE and Matplotlib config/cache paths into the repo so it can run without writing to the user profile.
-- For subset exports, missing configured channels are reported in the summary file.
+- For subset exports, the figure uses the native montage for geometry and sphere fitting, but only the requested channels are labeled and shown.
+- Missing configured channels are reported in the summary file.
 - For `standard_10**` systems, the layout comes from `eeg_positions`, not MNE.
