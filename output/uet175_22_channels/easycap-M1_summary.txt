@@ -1,0 +1,5 @@
+layout=easycap-M1
+channels_found=22
+channels=FZ,FC3,FC1,FCZ,FC2,FC4,C5,C3,C1,CZ,C2,C4,C6,CP3,CP1,CPZ,CP2,CP4,P1,PZ,P2,POZ
+missing_channels=
+exported_figures=yes

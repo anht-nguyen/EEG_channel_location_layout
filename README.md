@@ -1,32 +1,12 @@
 # EEG Channel Location Layout
 
-This repo exports reference figures for a fixed 32-channel EEG montage derived from the `EEG_CHANNELS` list used in `FloAim6TrialAnalysis`.
+This repo exports EEG sensor-layout figures from config-defined cases in [config/eeg_config.py](/c:/DATA/git/EEG_channel_location_layout/config/eeg_config.py).
 
-The current channel list lives in [config/eeg_config.py](/c:/DATA/git/EEG_channel_location_layout/config/eeg_config.py) and includes:
+The main script is [scripts/export_eeg_channel_layouts.py](/c:/DATA/git/EEG_channel_location_layout/scripts/export_eeg_channel_layouts.py). It reads `EXPORT_CASES` from the config, resolves one or more montages for each case, optionally subsets to a configured channel list, and exports:
 
-`Cz, Fz, Fp1, F7, F3, FC1, C3, FC5, FT9, T7, CP5, CP1, P3, P7, PO9, O1, Pz, Oz, O2, PO10, P8, P4, CP2, CP6, T8, FT10, FC6, C4, FC2, F4, F8, Fp2`
-
-## Contents
-
-- [scripts/export_eeg_channel_layouts.py](/c:/DATA/git/EEG_channel_location_layout/scripts/export_eeg_channel_layouts.py): main export script
-- [config/eeg_config.py](/c:/DATA/git/EEG_channel_location_layout/config/eeg_config.py): channel list and default montage reference
-- [utility/standard_1005.elc](/c:/DATA/git/EEG_channel_location_layout/utility/standard_1005.elc): custom ELC montage source
-- [utility/Standard-10-20-Cap32.ced](/c:/DATA/git/EEG_channel_location_layout/utility/Standard-10-20-Cap32.ced): custom Cap32 CED montage source
-- [output/channel_layouts](/c:/DATA/git/EEG_channel_location_layout/output/channel_layouts): exported figures and per-layout summaries
-
-## Supported Layouts
-
-The exporter currently supports four layout sources:
-
-- `easycap-M1`
-- `standard_1020`
-- `standard_1005_elc`
-- `cap32_ced`
-
-For built-in layouts, the script uses MNE standard montages. For local assets, it reads:
-
-- `.elc` via `mne.channels.read_custom_montage(...)`
-- `.ced` via a small parser in the script that converts the tab-delimited coordinates into an MNE `DigMontage`
+- `*_2d.png`
+- `*_3d.png`
+- `*_summary.txt`
 
 ## Setup
 
@@ -36,41 +16,99 @@ Install dependencies:
 python -m pip install -r requirements.txt
 ```
 
+Current runtime dependencies are listed in [requirements.txt](/c:/DATA/git/EEG_channel_location_layout/requirements.txt):
+
+- `mne`
+- `matplotlib`
+- `numpy`
+- `eeg_positions`
+
+## Montage Sources
+
+The exporter supports three montage-source patterns:
+
+- MNE built-in montages via `mne.channels.make_standard_montage(...)`
+- all built-in MNE montages via `"montage": "all_builtin"`
+- `eeg_positions` for `standard_1020`, `standard_1010`, and `standard_1005`
+
+`eeg_positions` is used to replace MNE's `standard_10**` montages:
+
+- `standard_1020` -> `eeg_positions.get_elec_coords(system="1020", as_mne_montage=True)`
+- `standard_1010` -> `eeg_positions.get_elec_coords(system="1010", as_mne_montage=True)`
+- `standard_1005` -> `eeg_positions.get_elec_coords(system="1005", as_mne_montage=True)`
+
+## Config Model
+
+Each case in `EXPORT_CASES` defines:
+
+- `channel_list`
+- `montage`
+- `sphere`
+- `output_dir`
+
+Supported `montage` forms are:
+
+- one montage name string, for example `"easycap-M1"`
+- `"all_builtin"`
+- a list of montage names, for example `["standard_1005", "easycap-M1"]`
+
+`channel_list=None` means export the montage's full native channel set. If `channel_list` is provided, the script matches channel names case-insensitively and exports the matching subset while preserving the montage's canonical channel names.
+
+`sphere` is passed through to `mne.viz.plot_sensors(...)` for both 2D and 3D exports. Example values in the current config include `None` and `"eeglab"`.
+
+## Current Cases
+
+The current config defines these cases:
+
+- `all_mne_montages`: export every built-in MNE montage with native channels to [output/all_MNE_montages](/c:/DATA/git/EEG_channel_location_layout/output/all_MNE_montages)
+- `eeg_32_channels`: export the 32-channel Emotiv-style list on `easycap-M1` to [output/eeg_32_channels](/c:/DATA/git/EEG_channel_location_layout/output/eeg_32_channels)
+- `uet175_22_channels`: export the 22-channel UET175 list on `easycap-M1` to [output/uet175_22_channels](/c:/DATA/git/EEG_channel_location_layout/output/uet175_22_channels)
+- `bci2000_64_channels`: export the 64-channel BCI2000 list on both `standard_1005` and `easycap-M1` to [output/bci2000_64_channels](/c:/DATA/git/EEG_channel_location_layout/output/bci2000_64_channels)
+
+The configured channel lists currently include:
+
+- `EEG_32_CHANNELS`
+- `EEG_22_channels_UET175`
+- `EEG_64_CHANNELS`
+
 ## Usage
 
-Export all supported layouts into the default output folder:
+Run all configured cases:
 
 ```powershell
 python scripts/export_eeg_channel_layouts.py
 ```
 
-Export only selected layouts:
+Run one or more selected cases:
 
 ```powershell
-python scripts/export_eeg_channel_layouts.py --layouts easycap-M1 cap32_ced
+python scripts/export_eeg_channel_layouts.py --cases eeg_32_channels
+python scripts/export_eeg_channel_layouts.py --cases bci2000_64_channels uet175_22_channels
 ```
 
-Export to a custom directory:
+Example with the full interpreter path:
 
 ```powershell
-python scripts/export_eeg_channel_layouts.py --output-dir output\custom_layouts
+& "C:\Program Files\Python310\python.exe" c:/DATA/git/EEG_channel_location_layout/scripts/export_eeg_channel_layouts.py --cases bci2000_64_channels
 ```
 
 ## Outputs
 
-For each layout, the script writes:
+For each resolved montage inside a case, the script writes:
 
-- `*_2d.png`: 2D top-view sensor layout
+- `*_2d.png`: 2D sensor layout
 - `*_3d.png`: 3D sensor layout
-- `*_summary.txt`: resolved channel names and any missing channels
+- `*_summary.txt`: exported channels and any missing requested channels
 
-Example output files:
+Examples:
 
-- [easycap-M1_2d.png](/c:/DATA/git/EEG_channel_location_layout/output/channel_layouts/easycap-M1_2d.png)
-- [easycap-M1_3d.png](/c:/DATA/git/EEG_channel_location_layout/output/channel_layouts/easycap-M1_3d.png)
-- [easycap-M1_summary.txt](/c:/DATA/git/EEG_channel_location_layout/output/channel_layouts/easycap-M1_summary.txt)
+- [output/eeg_32_channels/easycap-M1_2d.png](/c:/DATA/git/EEG_channel_location_layout/output/eeg_32_channels/easycap-M1_2d.png)
+- [output/eeg_32_channels/easycap-M1_summary.txt](/c:/DATA/git/EEG_channel_location_layout/output/eeg_32_channels/easycap-M1_summary.txt)
+- [output/bci2000_64_channels/standard_1005_2d.png](/c:/DATA/git/EEG_channel_location_layout/output/bci2000_64_channels/standard_1005_2d.png)
+- [output/bci2000_64_channels/easycap-M1_2d.png](/c:/DATA/git/EEG_channel_location_layout/output/bci2000_64_channels/easycap-M1_2d.png)
 
 ## Notes
 
-- The script forces MNE and Matplotlib config/cache paths into the repo so it can run in restricted environments without writing to the user profile.
-- The default montage reference from the source project is `easycap-M1`, but the exporter is intentionally able to render several alternative layouts for the same `EEG_CHANNELS` list.
+- The script forces MNE and Matplotlib config/cache paths into the repo so it can run without writing to the user profile.
+- For subset exports, missing configured channels are reported in the summary file.
+- For `standard_10**` systems, the layout comes from `eeg_positions`, not MNE.
