@@ -1,0 +1,5 @@
+layout=artinis-octamon
+channels_found=10
+channels=D1,D2,S1,S2,S3,S4,S5,S6,S7,S8
+missing_channels=
+exported_figures=yes

@@ -1,0 +1,5 @@
+layout=standard_postfixed
+channels_found=100
+channels=Fp1,Fpz,Fp2,F7a,F5a,F3a,F1a,Fza,F2a,F4a,F6a,F8a,F7,F5,F3,F1,Fz,F2,F4,F6,F8,F7p,F5p,F3p,F1p,Fzp,F2p,F4p,F6p,F8p,T1,T3a,C5a,C3a,C1a,Cza,C2a,C4a,C6a,T4a,T2,T3,C5,C3,C1,Cz,C2,C4,C6,T4,T3p,C5p,C3p,C1p,Czp,C2p,C4p,C6p,T4p,T5a,P5a,P3a,P1a,Pza,P2a,P4a,P6a,T6a,Cb1a,T5,P5,P3,P1,Pz,P2,P4,P6,T6,Cb2a,Cb1,O1a,P5p,P3p,P1p,Pzp,P2p,P4p,P6p,O2a,Cb2,O1,Oz,O2,Cb1p,Iz,Cb2p,M1,M2,A1,A2
+missing_channels=
+exported_figures=yes
